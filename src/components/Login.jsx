@@ -1,19 +1,19 @@
 import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
-export default function Register() {
+export default function Login() {
     useEffect(() => {
-        document.title = 'Регистрация';
+        document.title = 'Авторизация';
     }, []);
+
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
         email: '',
-        first_name: '',
-        last_name: '',
         password: '',
     });
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(null);
-    const [error, setError] = useState(null);
     const [errors, setErrors] = useState({});
 
     const handleInput = (e) => {
@@ -21,17 +21,14 @@ export default function Register() {
 
         setFormData((prevData) => ({...prevData, [name]: value}));
         setErrors((prevErrors) => ({...prevErrors, [name]: ''}));
-    }
+    };
 
     const handleForm = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setSuccess(null);
-        setError(null);
-        setErrors({});
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/register', {
+            const response = await fetch('http://127.0.0.1:8000/api/login', {
                 method: 'post',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(formData),
@@ -42,32 +39,30 @@ export default function Register() {
             if (result.success) {
                 setSuccess(result.message);
                 setTimeout(() => setSuccess(null), 3000);
-                setFormData({email: '', first_name: '', last_name: '', password: ''});
+                setFormData({email: '', password: ''});
+                localStorage.setItem('token', result.token);
+                navigate('/');
             } else {
                 setErrors(result.errors || {});
             }
         } catch (err) {
             console.error('Ошибка', err);
-            setError('Ошибка');
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     return (
-        <section className="mt-5">
-            <h1 className="mb-3">Регистрация</h1>
+        <section className="mt-3">
+            <h1 className="mb-3">Авторизация</h1>
 
             <div className="row">
                 <div className="col-3">
                     <form onSubmit={handleForm}>
-                        {['email', 'first_name', 'last_name', 'password'].map((field) => (
+                        {['email', 'password'].map((field) => (
                             <div className="mb-3" key={field}>
                                 <label htmlFor={field} className="form-label">
-                                    {field === 'email' ? 'Эл. почта' :
-                                        field === 'first_name' ? 'Имя' :
-                                            field === 'last_name' ? 'Фамилия' :
-                                                'Пароль'}
+                                    {field === 'email' ? 'Эл. почта' : 'Пароль'}
                                 </label>
                                 <input
                                     type={field === 'password' ? 'password' : 'text'}
@@ -82,10 +77,8 @@ export default function Register() {
                         ))}
 
                         <button type="submit" className="btn btn-success mb-3"
-                                disabled={loading}>{loading ? 'Загрузка...' : 'Зарегистрироваться'}</button>
-
+                                disabled={loading}>{loading ? 'Загрузка...' : 'Войти'}</button>
                         {success && <div className="alert alert-success">{success}</div>}
-                        {error && <div className="alert alert-danger">{error}</div>}
                     </form>
                 </div>
             </div>
